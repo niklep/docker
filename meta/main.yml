@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author: Janne Heß
+  description: Set up Docker
+  company: stuvus (https://stuvus.uni-stuttgart.de)
+
+  license: CC-BY-SA
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: Debian
+      versions:
+        - stretch
+
+  galaxy_tags:
+    - docker
+    - container
+    - dockerd
+
+dependencies: []
