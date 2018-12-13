@@ -1,0 +1,44 @@
+---
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+
+- name: Add apt key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+
+- name: Add apt repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable"
+    filename: docker
+
+- name: Install required packages
+  apt:
+    name: docker-ce
+
+- name: Disable service
+  service:
+    name: docker.service
+    enabled: false
+
+- name: Enable socket
+  service:
+    name: docker.socket
+    enabled: true
+
+- name: Add users to the docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items:
+    - "{{ docker_privileged_users }}"
+
+- name: Generate configuration
+  copy:
+    content: "{{ docker_daemon_config | to_nice_json }}\n"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0640
+  notify: Reload docker
