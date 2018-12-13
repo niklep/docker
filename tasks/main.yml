@@ -16,6 +16,20 @@
   apt:
     name: docker-ce
 
+- name: Install socket file
+  template:
+    src: docker.socket.j2
+    dest: /etc/systemd/system/docker.socket
+    owner: root
+    group: root
+    mode: 0644
+  register: socket
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+  when: socket.changed
+
 - name: Disable service
   service:
     name: docker.service
