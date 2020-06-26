@@ -9,7 +9,7 @@
 
 - name: Add apt repository
   apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable"
+    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
     filename: docker
 
 - name: Install required packages
@@ -23,12 +23,12 @@
     owner: root
     group: root
     mode: 0644
-  register: socket
+  register: docker_socket
 
 - name: Reload systemd
   systemd:
     daemon_reload: true
-  when: socket.changed
+  when: docker_socket.changed
 
 - name: Disable service
   service:
