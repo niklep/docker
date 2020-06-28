@@ -12,33 +12,19 @@
     repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
     filename: docker
 
-- name: Install required packages
-  apt:
-    name: docker-ce
+- name: Create docker config directory
+  file:
+    path: /etc/docker
+    state: directory
 
-- name: Install socket file
-  template:
-    src: docker.socket.j2
-    dest: /etc/systemd/system/docker.socket
+- name: Write docker config
+  copy:
+    content: "{{ docker_daemon_config | to_nice_json }}\n"
+    dest: /etc/docker/daemon.json
     owner: root
     group: root
-    mode: 0644
-  register: docker_socket
-
-- name: Reload systemd
-  systemd:
-    daemon_reload: true
-  when: docker_socket.changed
-
-- name: Disable service
-  service:
-    name: docker.service
-    enabled: false
-
-- name: Enable socket
-  service:
-    name: docker.socket
-    enabled: true
+    mode: 0640
+  notify: Reload docker
 
 - name: Add users to the docker group
   user:
@@ -48,11 +34,17 @@
   with_items:
     - "{{ docker_privileged_users }}"
 
-- name: Generate configuration
-  copy:
-    content: "{{ docker_daemon_config | to_nice_json }}\n"
-    dest: /etc/docker/daemon.json
-    owner: root
-    group: root
-    mode: 0640
-  notify: Reload docker
+# If this fails, try rebooting the target machine.
+- name: Install required packages
+  apt:
+    name:
+      - docker-ce
+      - docker-compose
+
+- meta: flush_handlers
+
+- name: Enable docker service
+  service:
+    name: docker
+    enabled: True
+    state: started

@@ -1,5 +1,9 @@
 ---
+- name: Reload systemd configuration
+  service:
+    daemon_reload: True
+
 - name: Reload docker
   service:
-    name: docker.service
+    name: docker
     state: reloaded
