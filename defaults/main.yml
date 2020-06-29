@@ -1,3 +1,9 @@
 ---
-docker_privileged_users: []
+docker_build:
+  enable: False
 docker_daemon_config: {}
+docker_privileged_users: []
+docker_swarm.deploy:
+  enable: False
+docker_swarm.setup:
+  enable: False

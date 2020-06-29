@@ -1,0 +1,17 @@
+---
+- name: "{{ project_name }} : Create directory"
+  file:
+    path: /etc/docker/compose/{{ project_name }}
+    state: directory
+
+- name: "{{ project_name }} : Write docker-compose.yml"
+  copy:
+    content: "{{ docker_compose_projects[project_name] | to_nice_yaml }}"
+    dest: /etc/docker/compose/{{ project_name }}/docker-compose.yml
+
+- name: "{{ project_name }} : Run docker-compose"
+  docker_compose:
+    project_src: /etc/docker/compose/{{ project_name }}
+    build: true
+    pull: true
+    remove_orphans: true

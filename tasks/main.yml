@@ -40,6 +40,8 @@
     name:
       - docker-ce
       - docker-compose
+      - python3-docker
+      - python3-jsondiff
 
 - meta: flush_handlers
 
@@ -48,3 +50,59 @@
     name: docker
     enabled: True
     state: started
+
+- name: Create required directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /etc/docker/stacks
+
+# docker_swarm: Setup
+
+- name: docker_swarm.setup
+  docker_swarm:
+    state: join
+    join_token: "{{ docker_swarm.setup.join_token }}"
+    advertise_addr: "{{ docker_swarm.setup.advertise_addr }}"
+    listen_addr: "{{ docker_swarm.setup.listen_addr | default('0.0.0.0:2377') }}"
+    remote_addrs: "{{ docker_swarm.setup.remote_addrs }}"
+  when: docker_swarm.enable
+
+# docker_compose_projects
+
+- name: docker_compose
+  include_tasks: project.yml
+  loop: "{{ (docker_compose_projects | default({})).keys() | list }}"
+  loop_control:
+    loop_var: project_name
+
+# docker_swarm: Deploy early stacks
+
+- name: docker_swarm.deploy (early)
+  include_tasks: stack.yml
+  loop: "{{ (docker_swarm.deploy.pre_build_stacks | default({})).keys() | list }}"
+  loop_control:
+    loop_var: stack_name
+  vars:
+    stack_category: pre_build_stacks
+  when: docker_swarm.enable | default(false)
+
+# docker_build
+
+- name: docker_build
+  include_tasks: image.yml
+  loop: "{{ (docker_build.images | default({})).keys() | list }}"
+  loop_control:
+    loop_var: image_name
+
+# docker_swarm: Deploy stacks
+
+- name: docker_swarm.deploy
+  include_tasks: stack.yml
+  loop: "{{ (docker_swarm.deploy.stacks | default({})).keys() | list }}"
+  loop_control:
+    loop_var: stack_name
+  vars:
+    stack_category: stacks
+  when: docker_swarm.enable

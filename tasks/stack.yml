@@ -1,0 +1,11 @@
+---
+- name: "{{ stack_name }} : Write docker compose file"
+  copy:
+    content: "{{ docker_swarm.deploy[stack_category][stack_name] | to_nice_yaml }}"
+    dest: /etc/docker/stacks/{{ stack_name }}.yml
+
+- name: "{{ stack_name }} : Run docker stack"
+  docker_stack:
+    compose:
+      - /etc/docker/stacks/{{ stack_name }}.yml
+    name: "{{ stack_name }}"

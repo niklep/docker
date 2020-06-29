@@ -1,0 +1,26 @@
+---
+- name: Create context directory
+  tempfile:
+    state: directory
+  register: docker_dockerfile_dir
+  changed_when: False
+
+- name: Write context
+  copy:
+    content: "{{ docker_build.images[image_name][item] }}"
+    dest: "{{ docker_dockerfile_dir.path }}/{{ item }}"
+  changed_when: False
+  loop: "{{ docker_build.images[image_name].keys() | list }}"
+
+- name: Build image `{{ image_name }}`
+  command:
+    chdir: "{{ docker_dockerfile_dir.path }}"
+    cmd: docker build -t {{ docker_build.registry }}/{{ image_name }}:latest .
+  changed_when: False
+
+- name: Push image `{{ image_name }}`
+  command:
+    cmd: docker push {{ docker_build.registry }}/{{ image_name }}:latest
+  register: result
+  changed_when: >
+    "Pushed" in result.stdout
