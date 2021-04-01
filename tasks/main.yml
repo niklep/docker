@@ -12,10 +12,16 @@
     repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
     filename: docker
 
-- name: Create docker config directory
-  file:
-    path: /etc/docker
-    state: directory
+- name: Install required packages
+  apt:
+    name:
+      - docker-ce
+      - docker-compose
+
+#- name: Create docker config directory
+#  file:
+#    path: /etc/docker
+#    state: directory
 
 - name: Write docker config
   copy:
@@ -33,13 +39,6 @@
     append: true
   with_items:
     - "{{ docker_privileged_users }}"
-
-# If this fails, try rebooting the target machine.
-- name: Install required packages
-  apt:
-    name:
-      - docker-ce
-      - docker-compose
 
 - meta: flush_handlers
 
