@@ -1,7 +1,27 @@
 ---
-- name: Install apt-transport-https
+- name: Uninstall old versions of docker
   apt:
-    name: apt-transport-https
+    name:
+      - docker
+      - docker-ce
+      - docker-ce-cli
+      - docker-engine
+      - docker-compose
+      - docker.io
+      - containerd
+      - containerd.io
+      - runc
+    state: absent
+
+- name: Install prerequisites
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    update_cache: yes
 
 - name: Add apt key
   apt_key:
@@ -12,16 +32,23 @@
     repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
     filename: docker
 
-- name: Install required packages
+- name: Install required packages (latest)
   apt:
     name:
       - docker-ce
+      - docker-ce-cli
       - docker-compose
+      - containerd.io
+    update_cache: yes
+  when: docker_version == "latest"
 
-#- name: Create docker config directory
-#  file:
-#    path: /etc/docker
-#    state: directory
+- name: Install required packages (specified)
+  apt:
+    name:
+      - docker-ce={{ docker_version }}
+      - docker-ce-cli={{ docker_version }}
+      - docker-compose
+      - containerd.io
 
 - name: Write docker config
   copy:

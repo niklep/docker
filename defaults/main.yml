@@ -1,3 +1,4 @@
 ---
 docker_privileged_users: []
 docker_daemon_config: {}
+docker_version: latest
